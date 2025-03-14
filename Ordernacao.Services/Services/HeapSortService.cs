@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
@@ -7,26 +8,36 @@ namespace Ordenacao.Services
     {
         public List<int> Sort(List<int> array)
         {
+            var stopwatch = Stopwatch.StartNew();
+            int comparisons = 0;
+
             if (array == null || array.Count <= 1)
                 return array;
 
             int n = array.Count;
 
-            // Constrói o max heap
             for (int i = n / 2 - 1; i >= 0; i--)
                 Heapify(array, n, i);
 
-            // Extrai os elementos um a um
             for (int i = n - 1; i >= 0; i--)
             {
-                // Troca o primeiro elemento com o último
                 int temp = array[0];
                 array[0] = array[i];
                 array[i] = temp;
 
-                // Heapifica a raiz do heap reduzido
                 Heapify(array, i, 0);
             }
+
+            stopwatch.Stop();
+            var elapsedTime = stopwatch.Elapsed;
+
+            SortLogger.LogSortDetails(
+                "HeapSort",
+                array.Count,
+                (long)elapsedTime.TotalMilliseconds,
+                comparisons,
+                0
+            );
 
             return array;
         }

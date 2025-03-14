@@ -9,13 +9,8 @@ namespace Ordenacao.Controllers
     [ApiController]
     public class OrdenacaoController : ControllerBase
     {
-        private readonly BubbleSortService _bubbleSortService;
-        private readonly SelectionSortService _selectionSortService;
-        private readonly InsertionSortService _insertionSortService;
-        private readonly MergeSortService _mergeSortService;
-        private readonly QuickSortService _quickSortService;
-        private readonly SortComparisonService _sortComparisonService;
-        private readonly TimSortService _timSortService;    
+        private readonly IDictionary<string, Func<List<int>, List<int>>> _sortServices;
+        private readonly SortComparisonService _sortComparisonService; // Add this field
 
         public OrdenacaoController(
             BubbleSortService bubbleSortService,
@@ -23,28 +18,34 @@ namespace Ordenacao.Controllers
             InsertionSortService insertionSortService,
             MergeSortService mergeSortService,
             QuickSortService quickSortService,
-            SortComparisonService sortComparisonService,
+            SortComparisonService sortComparisonService, // Inject SortComparisonService
             TimSortService timSortService)
         {
-            _bubbleSortService = bubbleSortService;
-            _selectionSortService = selectionSortService;
-            _insertionSortService = insertionSortService;
-            _mergeSortService = mergeSortService;
-            _quickSortService = quickSortService;
+            // Set up the dictionary for sorting algorithms
+            _sortServices = new Dictionary<string, Func<List<int>, List<int>>>
+            {
+                { "bubble-sort", bubbleSortService.Sort },
+                { "selection-sort", selectionSortService.Sort },
+                { "insertion-sort", insertionSortService.Sort },
+                { "merge-sort", mergeSortService.Sort },
+                { "quick-sort", quickSortService.Sort },
+                { "tim-sort", timSortService.Sort }
+            };
+
+            // Assign the injected SortComparisonService
             _sortComparisonService = sortComparisonService;
-            _timSortService = timSortService;
         }
 
         /// <summary>
         /// Retorna os tempos de execução de cada algoritmo de ordenação e o melhor deles.
         /// </summary>
         [HttpGet("comparativos")]
-        public IActionResult GetComparativos([FromQuery] string array = null, [FromQuery] int tamanho = 10)
+        public IActionResult GetComparativos([FromQuery] string array = null, [FromQuery] int tamanho = 100000)
         {
             try
             {
                 var arrayInt = ObterArray(array, tamanho);
-                var comparativo = _sortComparisonService.CompareSorts(arrayInt);
+                var comparativo = _sortComparisonService.CompareSorts(arrayInt); // Use SortComparisonService here
                 return Ok(comparativo);
             }
             catch (Exception ex)
@@ -54,88 +55,25 @@ namespace Ordenacao.Controllers
         }
 
         /// <summary>
-        /// Ordena um array utilizando o Bubble Sort.
+        /// Ordena um array utilizando o algoritmo especificado.
         /// </summary>
-        [HttpGet("bubble-sort")]
-        public IActionResult GetBubbleSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
+        [HttpGet("{algorithm}")]
+        public IActionResult GetSortResult(string algorithm, [FromQuery] string array = null, [FromQuery] int tamanho = 100000)
         {
             try
             {
                 var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _bubbleSortService.Sort(arrayInt);
-                return Ok(sortedArray);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = "Erro ao processar a requisição", details = ex.Message });
-            }
-        }
 
-        /// <summary>
-        /// Ordena um array utilizando o Selection Sort.
-        /// </summary>
-        [HttpGet("selection-sort")]
-        public IActionResult GetSelectionSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
-        {
-            try
-            {
-                var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _selectionSortService.Sort(arrayInt);
-                return Ok(sortedArray);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = "Erro ao processar a requisição", details = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Ordena um array utilizando o Insertion Sort.
-        /// </summary>
-        [HttpGet("insertion-sort")]
-        public IActionResult GetInsertionSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
-        {
-            try
-            {
-                var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _insertionSortService.Sort(arrayInt);
-                return Ok(sortedArray);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = "Erro ao processar a requisição", details = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Ordena um array utilizando o Merge Sort.
-        /// </summary>
-        [HttpGet("merge-sort")]
-        public IActionResult GetMergeSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
-        {
-            try
-            {
-                var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _mergeSortService.Sort(arrayInt);
-                return Ok(sortedArray);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = "Erro ao processar a requisição", details = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Ordena um array utilizando o Quick Sort.
-        /// </summary>
-        [HttpGet("quick-sort")]
-        public IActionResult GetQuickSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
-        {
-            try
-            {
-                var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _quickSortService.Sort(arrayInt);
-                return Ok(sortedArray);
+                // If the algorithm exists in the dictionary, execute it
+                if (_sortServices.ContainsKey(algorithm.ToLower()))
+                {
+                    var sortedArray = _sortServices[algorithm.ToLower()](arrayInt);
+                    return Ok(sortedArray);
+                }
+                else
+                {
+                    return BadRequest(new { error = "Algoritmo de ordenação não encontrado" });
+                }
             }
             catch (Exception ex)
             {
@@ -161,21 +99,5 @@ namespace Ordenacao.Controllers
             }
             return randomArray;
         }
-
-        [HttpGet("tim-sort")]
-        public IActionResult GetTimSort([FromQuery] string array = null, [FromQuery] int tamanho = 10)
-        {
-            try
-            {
-                var arrayInt = ObterArray(array, tamanho);
-                var sortedArray = _timSortService.Sort(arrayInt);
-                return Ok(sortedArray);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = "Erro ao processar a requisição", details = ex.Message });
-            }
-        }
-
     }
 }

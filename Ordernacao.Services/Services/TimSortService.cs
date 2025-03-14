@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
@@ -9,6 +10,10 @@ namespace Ordenacao.Services
 
         public List<int> Sort(List<int> array)
         {
+            var stopwatch = Stopwatch.StartNew();
+            int comparisons = 0;
+            int swaps = 0;
+
             if (array == null || array.Count == 0)
                 return new List<int>();
 
@@ -16,7 +21,7 @@ namespace Ordenacao.Services
 
             // Aplicar Insertion Sort em subarrays de tamanho RUN
             for (int i = 0; i < n; i += RUN)
-                InsertionSort(array, i, Math.Min(i + RUN - 1, n - 1));
+                InsertionSort(array, i, Math.Min(i + RUN - 1, n - 1), ref comparisons, ref swaps);
 
             // Mesclar subarrays ordenados usando Merge Sort
             for (int size = RUN; size < n; size = 2 * size)
@@ -27,14 +32,26 @@ namespace Ordenacao.Services
                     int right = Math.Min((left + 2 * size - 1), (n - 1));
 
                     if (mid < right)
-                        Merge(array, left, mid, right);
+                        Merge(array, left, mid, right, ref comparisons, ref swaps);
                 }
             }
+
+            stopwatch.Stop();
+            var elapsedTime = stopwatch.Elapsed;
+
+            // Log the execution details
+            SortLogger.LogSortDetails(
+                "TimSort",
+                array.Count,
+                (long)elapsedTime.TotalMilliseconds,
+                comparisons,
+                swaps
+            );
 
             return array;
         }
 
-        private void InsertionSort(List<int> array, int left, int right)
+        private void InsertionSort(List<int> array, int left, int right, ref int comparisons, ref int swaps)
         {
             for (int i = left + 1; i <= right; i++)
             {
@@ -45,13 +62,15 @@ namespace Ordenacao.Services
                 {
                     array[j + 1] = array[j];
                     j--;
+                    comparisons++; // Count comparison in the while loop
+                    swaps++; // Count swap in the array shift
                 }
 
                 array[j + 1] = key;
             }
         }
 
-        private void Merge(List<int> array, int left, int mid, int right)
+        private void Merge(List<int> array, int left, int mid, int right, ref int comparisons, ref int swaps)
         {
             int len1 = mid - left + 1;
             int len2 = right - mid;
@@ -69,6 +88,7 @@ namespace Ordenacao.Services
 
             while (i1 < len1 && i2 < len2)
             {
+                comparisons++; // Count comparison for each while check
                 if (leftArr[i1] <= rightArr[i2])
                     array[k++] = leftArr[i1++];
                 else
@@ -76,10 +96,16 @@ namespace Ordenacao.Services
             }
 
             while (i1 < len1)
+            {
                 array[k++] = leftArr[i1++];
+                swaps++; // Count each swap for remaining elements
+            }
 
             while (i2 < len2)
+            {
                 array[k++] = rightArr[i2++];
+                swaps++; // Count each swap for remaining elements
+            }
         }
     }
 }

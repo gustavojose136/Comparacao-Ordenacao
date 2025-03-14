@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
@@ -7,14 +8,17 @@ namespace Ordenacao.Services
     {
         public List<int> Sort(List<int> array)
         {
+            var stopwatch = Stopwatch.StartNew();
+            int comparisons = 0;
+
             if (array == null || array.Count == 0)
                 return array;
 
-            // Determina o valor mínimo e máximo para definir o range
             int min = array[0];
             int max = array[0];
             foreach (int num in array)
             {
+                comparisons++;
                 if (num < min)
                     min = num;
                 if (num > max)
@@ -25,30 +29,38 @@ namespace Ordenacao.Services
             int[] count = new int[range];
             int[] output = new int[array.Count];
 
-            // Conta as ocorrências de cada valor
             foreach (int num in array)
             {
+                comparisons++;
                 count[num - min]++;
             }
 
-            // Calcula as posições finais
             for (int i = 1; i < count.Length; i++)
             {
                 count[i] += count[i - 1];
             }
 
-            // Constrói o array de saída (estável)
             for (int i = array.Count - 1; i >= 0; i--)
             {
                 output[count[array[i] - min] - 1] = array[i];
                 count[array[i] - min]--;
             }
 
-            // Copia o array ordenado de volta para o original
             for (int i = 0; i < array.Count; i++)
             {
                 array[i] = output[i];
             }
+
+            stopwatch.Stop();
+            var elapsedTime = stopwatch.Elapsed;
+
+            SortLogger.LogSortDetails(
+                "CountingSort",
+                array.Count,
+                (long)elapsedTime.TotalMilliseconds,
+                comparisons,
+                0
+            );
 
             return array;
         }

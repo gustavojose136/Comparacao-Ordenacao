@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
@@ -7,6 +8,10 @@ namespace Ordenacao.Services
     {
         public List<int> Sort(List<int> array)
         {
+            var stopwatch = Stopwatch.StartNew();
+            int comparisons = 0;
+            int swaps = 0;
+
             if (array == null || array.Count == 0) return new List<int>();
 
             int n = array.Count;
@@ -19,9 +24,23 @@ namespace Ordenacao.Services
                 {
                     array[j + 1] = array[j];
                     j--;
+                    comparisons++;
+                    swaps++;
                 }
                 array[j + 1] = key;
             }
+
+            stopwatch.Stop();
+            var elapsedTime = stopwatch.Elapsed;
+
+            SortLogger.LogSortDetails(
+                "InsertionSort",
+                array.Count,
+                (long)elapsedTime.TotalMilliseconds,
+                comparisons,
+                swaps
+            );
+
             return array;
         }
     }
