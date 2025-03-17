@@ -92,7 +92,7 @@ O OpenTelemetry foi configurado para enviar métricas e logs para o Jaeger e Ela
 ## 6. Conclusão
 
 ### Desempenho dos Algoritmos
-- **Algoritmos Básicos**: Bubble Sort e Insertion Sort apresentaram desempenho inferior para grandes conjuntos de dados, com complexidade \(O(n^2)\).
+- **Algoritmos Básicos**: Bubble Sort e Insertion Sort apresentaram desempenho inferior para grandes conjuntos de dados, com complexidade \(O(n²)\).
 - **Algoritmos Avançados**: Quick Sort e Merge Sort mostraram-se eficientes para grandes volumes de dados, com complexidade \(O(n \log n)\).
 - **Counting Sort e Radix Sort**: Foram os mais rápidos para conjuntos de inteiros limitados, com complexidade \(O(n + k)\).
 
