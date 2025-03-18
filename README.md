@@ -134,4 +134,4 @@ Com base nos testes realizados:
 - **Gustavo José Rosa**
 - **Thomas Taiga Martinez**
 - **Thiago Cirne**
-- - **Eduardo da Maia Haak**
+- **Eduardo da Maia Haak**
