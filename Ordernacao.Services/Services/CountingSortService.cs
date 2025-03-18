@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Ordernacao.Services.Services.Interface;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
-    public class CountingSortService
+    public class CountingSortService : ISortStrategy
     {
         public List<int> Sort(List<int> array)
         {
@@ -14,8 +15,7 @@ namespace Ordenacao.Services
             if (array == null || array.Count == 0)
                 return array;
 
-            int min = array[0];
-            int max = array[0];
+            int min = array[0], max = array[0];
             foreach (int num in array)
             {
                 comparisons++;
@@ -36,9 +36,7 @@ namespace Ordenacao.Services
             }
 
             for (int i = 1; i < count.Length; i++)
-            {
                 count[i] += count[i - 1];
-            }
 
             for (int i = array.Count - 1; i >= 0; i--)
             {
@@ -47,21 +45,10 @@ namespace Ordenacao.Services
             }
 
             for (int i = 0; i < array.Count; i++)
-            {
                 array[i] = output[i];
-            }
 
             stopwatch.Stop();
-            var elapsedTime = stopwatch.Elapsed;
-
-            SortLogger.LogSortDetails(
-                "CountingSort",
-                array.Count,
-                (long)elapsedTime.TotalMilliseconds,
-                comparisons,
-                0
-            );
-
+            SortLogger.LogSortDetails("CountingSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, 0);
             return array;
         }
     }

@@ -1,31 +1,24 @@
-﻿using System;
+﻿using Ordernacao.Services.Services.Interface;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
-    public class QuickSortService
+    public class QuickSortService : ISortStrategy
     {
         public List<int> Sort(List<int> array)
         {
             var stopwatch = Stopwatch.StartNew();
-            int comparisons = 0;
-            int swaps = 0;
+            int comparisons = 0, swaps = 0;
 
-            if (array == null || array.Count == 0) return new List<int>();
+            if (array == null || array.Count == 0)
+                return new List<int>();
+
             QuickSort(array, 0, array.Count - 1, ref comparisons, ref swaps);
 
             stopwatch.Stop();
-            var elapsedTime = stopwatch.Elapsed;
-
-            SortLogger.LogSortDetails(
-                "QuickSort",
-                array.Count,
-                (long)elapsedTime.TotalMilliseconds,
-                comparisons,
-                swaps
-            );
-
+            SortLogger.LogSortDetails("QuickSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
             return array;
         }
 

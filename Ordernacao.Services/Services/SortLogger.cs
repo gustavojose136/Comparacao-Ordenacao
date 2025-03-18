@@ -1,10 +1,11 @@
+using System;
 using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
     public class SortLogger
     {
-        private static readonly ActivitySource ActivitySource = new("Ordenacao");
+        private static readonly ActivitySource ActivitySource = new ActivitySource("Ordenacao");
 
         public static void LogSortDetails(string algorithmName, int dataSize, long timeElapsed, int comparisons, int swaps)
         {

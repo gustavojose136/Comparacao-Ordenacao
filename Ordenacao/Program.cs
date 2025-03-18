@@ -3,6 +3,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 using Ordenacao.Services;
+using Ordernacao.Services.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,17 +35,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<BubbleSortService>();
-builder.Services.AddScoped<InsertionSortService>();
-builder.Services.AddScoped<MergeSortService>();
-builder.Services.AddScoped<QuickSortService>();
-builder.Services.AddScoped<SelectionSortService>();
-builder.Services.AddScoped<TimSortService>();
-builder.Services.AddScoped<HeapSortService>();
-builder.Services.AddScoped<ShellSortService>();
-builder.Services.AddScoped<CountingSortService>();
-builder.Services.AddScoped<RadixSortService>();
+builder.Services.AddScoped<ISortStrategy, BubbleSortService>();
+builder.Services.AddScoped<ISortStrategy, CountingSortService>();
+builder.Services.AddScoped<ISortStrategy, HeapSortService>();
+builder.Services.AddScoped<ISortStrategy, InsertionSortService>();
+builder.Services.AddScoped<ISortStrategy, MergeSortService>();
+builder.Services.AddScoped<ISortStrategy, QuickSortService>();
+builder.Services.AddScoped<ISortStrategy, RadixSortService>();
+builder.Services.AddScoped<ISortStrategy, SelectionSortService>();
+builder.Services.AddScoped<ISortStrategy, ShellSortService>();
+builder.Services.AddScoped<ISortStrategy, TimSortService>();
+
 builder.Services.AddScoped<SortComparisonService>();
+builder.Services.AddScoped<DataGeneratorService>();
 
 var app = builder.Build();
 

@@ -1,18 +1,19 @@
-﻿using System;
+﻿using Ordernacao.Services.Services.Interface;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
-    public class SelectionSortService
+    public class SelectionSortService : ISortStrategy
     {
         public List<int> Sort(List<int> array)
         {
             var stopwatch = Stopwatch.StartNew();
-            int comparisons = 0;
-            int swaps = 0;
+            int comparisons = 0, swaps = 0;
 
-            if (array == null || array.Count == 0) return new List<int>();
+            if (array == null || array.Count == 0)
+                return new List<int>();
 
             int n = array.Count;
             for (int i = 0; i < n - 1; i++)
@@ -33,16 +34,7 @@ namespace Ordenacao.Services
             }
 
             stopwatch.Stop();
-            var elapsedTime = stopwatch.Elapsed;
-
-            SortLogger.LogSortDetails(
-                "SelectionSort",
-                array.Count,
-                (long)elapsedTime.TotalMilliseconds,
-                comparisons,
-                swaps
-            );
-
+            SortLogger.LogSortDetails("SelectionSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
             return array;
         }
     }

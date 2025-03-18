@@ -5,49 +5,33 @@ using System.Diagnostics;
 
 namespace Ordenacao.Services
 {
-    public class BubbleSortService : IBubbleSortService
+    public class BubbleSortService : ISortStrategy
     {
         public List<int> Sort(List<int> array)
         {
             var stopwatch = Stopwatch.StartNew();
-            int comparisons = 0;  
-            int swaps = 0;       
-            
-            if (array == null || array.Count == 0) return new List<int>();
-
+            int comparisons = 0, swaps = 0;
             int n = array.Count;
-            bool swapped;
 
             for (int i = 0; i < n - 1; i++)
             {
-                swapped = false;
+                bool swapped = false;
                 for (int j = 0; j < n - i - 1; j++)
                 {
-                    comparisons++; 
+                    comparisons++;
                     if (array[j] > array[j + 1])
                     {
-                
                         (array[j], array[j + 1]) = (array[j + 1], array[j]);
+                        swaps++;
                         swapped = true;
-                        swaps++; 
                     }
                 }
-                if (!swapped) break; 
+                if (!swapped)
+                    break;
             }
 
             stopwatch.Stop();
-
-      
-            var elapsedTime = stopwatch.Elapsed; 
-
-            SortLogger.LogSortDetails(
-                "BubbleSort",
-                array.Count,
-                (long)elapsedTime.TotalMilliseconds,  
-                comparisons,
-                swaps
-            );
-
+            SortLogger.LogSortDetails("BubbleSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
             return array;
         }
     }

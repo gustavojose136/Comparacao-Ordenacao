@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Ordenacao.Services;
+using Ordernacao.Services.Services.Interface;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Ordenacao.Controllers
 {
@@ -9,31 +11,20 @@ namespace Ordenacao.Controllers
     [ApiController]
     public class OrdenacaoController : ControllerBase
     {
-        private readonly IDictionary<string, Func<List<int>, List<int>>> _sortServices;
-        private readonly SortComparisonService _sortComparisonService; // Add this field
+        private readonly SortingContext _sortingContext;
+        private readonly IDictionary<string, ISortStrategy> _sortStrategies;
+        private readonly SortComparisonService _sortComparisonService;
+        private readonly DataGeneratorService _dataGeneratorService;
 
-        public OrdenacaoController(
-            BubbleSortService bubbleSortService,
-            SelectionSortService selectionSortService,
-            InsertionSortService insertionSortService,
-            MergeSortService mergeSortService,
-            QuickSortService quickSortService,
-            SortComparisonService sortComparisonService, // Inject SortComparisonService
-            TimSortService timSortService)
+        public OrdenacaoController(IEnumerable<ISortStrategy> sortStrategies,
+                                   SortComparisonService sortComparisonService,
+                                   DataGeneratorService dataGeneratorService)
         {
-            // Set up the dictionary for sorting algorithms
-            _sortServices = new Dictionary<string, Func<List<int>, List<int>>>
-            {
-                { "bubble-sort", bubbleSortService.Sort },
-                { "selection-sort", selectionSortService.Sort },
-                { "insertion-sort", insertionSortService.Sort },
-                { "merge-sort", mergeSortService.Sort },
-                { "quick-sort", quickSortService.Sort },
-                { "tim-sort", timSortService.Sort }
-            };
-
-            // Assign the injected SortComparisonService
+            _sortingContext = new SortingContext();
+            // Usa o nome da classe (removendo "Service") em lowercase para chave
+            _sortStrategies = sortStrategies.ToDictionary(s => s.GetType().Name.Replace("Service", "").ToLower());
             _sortComparisonService = sortComparisonService;
+            _dataGeneratorService = dataGeneratorService;
         }
 
         /// <summary>
@@ -45,7 +36,7 @@ namespace Ordenacao.Controllers
             try
             {
                 var arrayInt = ObterArray(array, tamanho);
-                var comparativo = _sortComparisonService.CompareSorts(arrayInt); // Use SortComparisonService here
+                var comparativo = _sortComparisonService.CompareSorts(arrayInt);
                 return Ok(comparativo);
             }
             catch (Exception ex)
@@ -64,10 +55,10 @@ namespace Ordenacao.Controllers
             {
                 var arrayInt = ObterArray(array, tamanho);
 
-                // If the algorithm exists in the dictionary, execute it
-                if (_sortServices.ContainsKey(algorithm.ToLower()))
+                if (_sortStrategies.TryGetValue(algorithm.ToLower(), out var strategy))
                 {
-                    var sortedArray = _sortServices[algorithm.ToLower()](arrayInt);
+                    _sortingContext.SetSortStrategy(strategy);
+                    var sortedArray = _sortingContext.ExecuteSort(arrayInt);
                     return Ok(sortedArray);
                 }
                 else
@@ -82,7 +73,30 @@ namespace Ordenacao.Controllers
         }
 
         /// <summary>
-        /// Gera um array aleatório caso o usuário não forneça um.
+        /// Endpoint para gerar um arquivo com números aleatórios.
+        /// </summary>
+        [HttpGet("gerar-dados")]
+        public IActionResult GerarDados([FromQuery] int tamanho = 100000,
+                                        [FromQuery] string fileType = "text",
+                                        [FromQuery] string filePath = "dados.txt")
+        {
+            try
+            {
+                var randomNumbers = _dataGeneratorService.GenerateRandomNumbers(tamanho);
+                // Define o tipo de arquivo: "binary" para binário, qualquer outro para texto
+                FileType tipo = fileType.ToLower() == "binary" ? FileType.Binary : FileType.Text;
+                _dataGeneratorService.SaveNumbersToFile(randomNumbers, filePath, tipo);
+
+                return Ok(new { message = $"Arquivo gerado com sucesso em {filePath}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = "Erro ao gerar o arquivo", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Converte a string recebida ou gera um array aleatório.
         /// </summary>
         private List<int> ObterArray(string array, int tamanho)
         {
@@ -92,12 +106,7 @@ namespace Ordenacao.Controllers
             }
 
             var random = new Random();
-            var randomArray = new List<int>();
-            for (int i = 0; i < tamanho; i++)
-            {
-                randomArray.Add(random.Next(0, 100)); // Números aleatórios entre 0 e 99
-            }
-            return randomArray;
+            return Enumerable.Range(0, tamanho).Select(_ => random.Next(0, 100)).ToList();
         }
     }
 }
