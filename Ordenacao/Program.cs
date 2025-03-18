@@ -1,25 +1,30 @@
 using OpenTelemetry;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics; // Adicionado para métricas
+using OpenTelemetry.Exporter;
 using Ordenacao.Services;
 using Ordernacao.Services.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure OpenTelemetry Tracing & Logging
+// Configure OpenTelemetry Tracing & Metrics
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSource("Ordenacao")
-            .AddConsoleExporter();
+            .AddAspNetCoreInstrumentation() // Instrumentação de requisições HTTP (tracing)
+            .AddHttpClientInstrumentation() // Instrumentação de chamadas HTTP do cliente (tracing)
+            .AddSource("Ordenacao") // Nome do tracer
+            .AddJaegerExporter(options =>
+            {
+                options.AgentHost = "localhost"; // Host do Jaeger
+                options.AgentPort = 5775; // Porta do Jaeger
+            });
     })
     .WithMetrics(metricsProviderBuilder =>
     {
-        metricsProviderBuilder.AddAspNetCoreInstrumentation();
+        metricsProviderBuilder
+            .AddAspNetCoreInstrumentation(); // Instrumentação de métricas para ASP.NET Core
     });
 
 // Add logging with OpenTelemetry
