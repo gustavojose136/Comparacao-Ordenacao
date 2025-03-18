@@ -1,7 +1,6 @@
 using OpenTelemetry;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Logs;
+using OpenTelemetry.Exporter;
 using Ordenacao.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,10 +10,14 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSource("Ordenacao")
-            .AddConsoleExporter();
+            .AddAspNetCoreInstrumentation() // Para instrumentar automaticamente requisições HTTP
+            .AddHttpClientInstrumentation() // Para instrumentar automaticamente requisições HTTP feitas pelo client
+            .AddSource("Ordenacao") // Nome do tracer
+            .AddJaegerExporter(options =>
+            {
+                options.AgentHost = "localhost"; // Defina o host do agente Jaeger (pode ser alterado conforme seu ambiente)
+                options.AgentPort = 5775; // Porta do agente Jaeger
+            });
     })
     .WithMetrics(metricsProviderBuilder =>
     {
