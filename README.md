@@ -9,7 +9,7 @@
 
 ## 1. Introdução
 Este relatório apresenta os resultados de uma atividade prática realizada por uma equipe de até 4 alunos, com o objetivo de implementar, comparar e analisar a performance de diferentes algoritmos de ordenação. A atividade foi desenvolvida em C# e seguiu os requisitos especificados, incluindo a utilização do padrão de projeto Strategy, coleta de métricas com OpenTelemetry e visualização de logs com Jaeger. Além disso, foram gerados dados aleatórios para teste e analisados os resultados por meio de métricas e gráficos comparativos.
-Mais específicamente, o processo de execução dos métodos de ordenação e contagem dos tempos de execução são realizados através de uma API que na ausência do Jaeger pode ser rodada e testada localmente e possuí integração com Swagger.
+Mais específicamente, o processo de execução dos métodos de ordenação e contagem dos tempos de execução são realizados através de uma API que na ausência do Jaeger pode ser rodada e testada localmente e possui integração com Swagger.
 
 ## 2. Código-fonte Documentado e Organizado
 O código-fonte foi estruturado de forma modular e organizada, seguindo boas práticas de desenvolvimento. A solução foi dividida em projetos e namespaces para facilitar a manutenção e a compreensão. A estrutura do projeto é a seguinte:
