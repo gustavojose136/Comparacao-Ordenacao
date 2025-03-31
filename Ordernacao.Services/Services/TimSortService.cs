@@ -21,29 +21,40 @@ namespace Ordenacao.Services
 
             int n = array.Count;
 
-            // Apply Insertion Sort to subarrays of size RUN
+            // Aplicar Insertion Sort a subarrays de tamanho RUN
             for (int i = 0; i < n; i += RUN)
                 InsertionSort(array, i, Math.Min(i + RUN - 1, n - 1), ref comparisons, ref swaps);
 
-            // Merge the sorted subarrays progressively, using parallelism for merge steps
+            // Mesclagem progressiva das sublistas, usando paralelismo
             for (int size = RUN; size < n; size *= 2)
             {
-                // Parallelize the merging process
-                var tasks = new List<Task>();
+                List<Task<Tuple<int, int>>> tasks = new List<Task<Tuple<int, int>>>();
+
+                // Criar uma cópia da lista para evitar problemas de concorrência
+                List<int> tempArray = new List<int>(array);
 
                 for (int left = 0; left < n; left += 2 * size)
                 {
                     int mid = left + size - 1;
                     int right = Math.Min((left + 2 * size - 1), (n - 1));
 
-                    if (mid < right)
+                    if (mid < right && mid >= 0 && right >= 0)
                     {
-                        tasks.Add(Task.Run(() => Merge(array, left, mid, right, ref comparisons, ref swaps)));
+                        tasks.Add(Task.Run(() => Merge(tempArray, left, mid, right)));
                     }
                 }
 
-                // Wait for all merging tasks to complete
+                // Esperar todas as tarefas de mesclagem terminarem
                 Task.WhenAll(tasks).Wait();
+
+                foreach (var task in tasks)
+                {
+                    comparisons += task.Result.Item1;
+                    swaps += task.Result.Item2;
+                }
+
+                // Copiar os resultados mesclados de volta para o array principal
+                array = new List<int>(tempArray);
             }
 
             stopwatch.Stop();
@@ -68,10 +79,15 @@ namespace Ordenacao.Services
             }
         }
 
-        private void Merge(List<int> array, int left, int mid, int right, ref int comparisons, ref int swaps)
+        private Tuple<int, int> Merge(List<int> array, int left, int mid, int right)
         {
-            int len1 = mid - left + 1;
-            int len2 = right - mid;
+            int comparisons = 0, swaps = 0;
+
+            // Garantir que os tamanhos dos arrays sejam válidos
+            int len1 = Math.Max(0, mid - left + 1);
+            int len2 = Math.Max(0, right - mid);
+
+            if (len1 == 0 || len2 == 0) return Tuple.Create(comparisons, swaps);
 
             List<int> leftArr = new List<int>(len1);
             List<int> rightArr = new List<int>(len2);
@@ -104,9 +120,12 @@ namespace Ordenacao.Services
                 array[k++] = rightArr[i2++];
                 swaps++;
             }
+
+            return Tuple.Create(comparisons, swaps);
         }
     }
 }
+
 
 // Parallelizing the Merge Process:
 // The merging process is now parallelized using Task.Run. We create tasks for each merge operation and execute them 

@@ -17,8 +17,7 @@ namespace Ordenacao.Services
             if (array == null || array.Count == 0)
                 return new List<int>();
 
-            // Get the results (comparisons, swaps) from the QuickSort method
-            var result = QuickSort(array, 0, array.Count - 1);
+            var result = QuickSort(new List<int>(array), 0, array.Count - 1);
             comparisons = result.Item2;
             swaps = result.Item3;
 
@@ -35,21 +34,24 @@ namespace Ordenacao.Services
             {
                 int pi = Partition(array, low, high, ref comparisons, ref swaps);
 
-                // Perform parallel sorting on left and right partitions
-                var leftTask = Task.Run(() => QuickSort(array.GetRange(low, pi), low, pi - 1));
-                var rightTask = Task.Run(() => QuickSort(array.GetRange(pi + 1, high - pi), pi + 1, high));
+                // Create subarrays instead of modifying the main list
+                List<int> leftSubArray = new List<int>(array.GetRange(low, pi - low));
+                List<int> rightSubArray = new List<int>(array.GetRange(pi + 1, high - pi));
 
-                // Wait for both tasks to complete
+                // Perform parallel sorting on left and right partitions
+                var leftTask = Task.Run(() => QuickSort(leftSubArray, 0, leftSubArray.Count - 1));
+                var rightTask = Task.Run(() => QuickSort(rightSubArray, 0, rightSubArray.Count - 1));
+
                 Task.WhenAll(leftTask, rightTask).Wait();
 
-                // Combine the results from both partitions
                 var leftResult = leftTask.Result;
                 var rightResult = rightTask.Result;
 
                 comparisons += leftResult.Item2 + rightResult.Item2;
                 swaps += leftResult.Item3 + rightResult.Item3;
 
-                array = leftResult.Item1.Concat(rightResult.Item1).ToList();
+                // Combine the results correctly
+                array = leftResult.Item1.Concat(new List<int> { array[pi] }).Concat(rightResult.Item1).ToList();
             }
 
             return Tuple.Create(array, comparisons, swaps);
@@ -76,6 +78,7 @@ namespace Ordenacao.Services
         }
     }
 }
+
 
 // Parallel Sorting:
 // The QuickSort method now uses Task.Run to perform parallel quicksort on the left and right partitions of the array.

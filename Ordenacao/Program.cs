@@ -45,11 +45,11 @@ builder.Services.AddScoped<ISortStrategy, CountingSortService>();
 builder.Services.AddScoped<ISortStrategy, HeapSortService>();
 builder.Services.AddScoped<ISortStrategy, InsertionSortService>();
 builder.Services.AddScoped<ISortStrategy, MergeSortService>();
-//builder.Services.AddScoped<ISortStrategy, QuickSortService>();
+builder.Services.AddScoped<ISortStrategy, QuickSortService>();
 builder.Services.AddScoped<ISortStrategy, RadixSortService>();
 builder.Services.AddScoped<ISortStrategy, SelectionSortService>();
 builder.Services.AddScoped<ISortStrategy, ShellSortService>();
-//builder.Services.AddScoped<ISortStrategy, TimSortService>();
+builder.Services.AddScoped<ISortStrategy, TimSortService>();
 
 builder.Services.AddScoped<SortComparisonService>();
 builder.Services.AddScoped<DataGeneratorService>();
