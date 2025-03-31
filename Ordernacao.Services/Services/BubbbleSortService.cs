@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Ordenacao.Services
 {
@@ -12,27 +13,36 @@ namespace Ordenacao.Services
             var stopwatch = Stopwatch.StartNew();
             int comparisons = 0, swaps = 0;
             int n = array.Count;
+            bool swapped;
 
             for (int i = 0; i < n - 1; i++)
             {
-                bool swapped = false;
-                for (int j = 0; j < n - i - 1; j++)
+                swapped = false;
+
+                Parallel.For(0, n - i - 1, j =>
                 {
-                    comparisons++;
                     if (array[j] > array[j + 1])
                     {
-                        (array[j], array[j + 1]) = (array[j + 1], array[j]);
-                        swaps++;
+                        lock (array)
+                        {
+                            (array[j], array[j + 1]) = (array[j + 1], array[j]);
+                            swaps++;
+                        }
                         swapped = true;
                     }
-                }
+                    comparisons++;
+                });
+
                 if (!swapped)
                     break;
             }
 
             stopwatch.Stop();
-            SortLogger.LogSortDetails("BubbleSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
+            SortLogger.LogSortDetails("ParallelBubbleSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
             return array;
         }
     }
 }
+
+// O BubbleSortService agora usa Parallel.For para distribuir as comparações, com um bloqueio (lock) para evitar condições de corrida ao 
+// realizar trocas. Esse método pode reduzir ligeiramente o tempo de execução, mas Bubble Sort não se beneficia muito da paralelização. 

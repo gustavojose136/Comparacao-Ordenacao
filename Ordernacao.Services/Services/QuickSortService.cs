@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ordenacao.Services
 {
@@ -15,21 +17,42 @@ namespace Ordenacao.Services
             if (array == null || array.Count == 0)
                 return new List<int>();
 
-            QuickSort(array, 0, array.Count - 1, ref comparisons, ref swaps);
+            // Get the results (comparisons, swaps) from the QuickSort method
+            var result = QuickSort(array, 0, array.Count - 1);
+            comparisons = result.Item2;
+            swaps = result.Item3;
 
             stopwatch.Stop();
             SortLogger.LogSortDetails("QuickSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, swaps);
-            return array;
+            return result.Item1;
         }
 
-        private void QuickSort(List<int> array, int low, int high, ref int comparisons, ref int swaps)
+        private Tuple<List<int>, int, int> QuickSort(List<int> array, int low, int high)
         {
+            int comparisons = 0, swaps = 0;
+
             if (low < high)
             {
                 int pi = Partition(array, low, high, ref comparisons, ref swaps);
-                QuickSort(array, low, pi - 1, ref comparisons, ref swaps);
-                QuickSort(array, pi + 1, high, ref comparisons, ref swaps);
+
+                // Perform parallel sorting on left and right partitions
+                var leftTask = Task.Run(() => QuickSort(array.GetRange(low, pi), low, pi - 1));
+                var rightTask = Task.Run(() => QuickSort(array.GetRange(pi + 1, high - pi), pi + 1, high));
+
+                // Wait for both tasks to complete
+                Task.WhenAll(leftTask, rightTask).Wait();
+
+                // Combine the results from both partitions
+                var leftResult = leftTask.Result;
+                var rightResult = rightTask.Result;
+
+                comparisons += leftResult.Item2 + rightResult.Item2;
+                swaps += leftResult.Item3 + rightResult.Item3;
+
+                array = leftResult.Item1.Concat(rightResult.Item1).ToList();
             }
+
+            return Tuple.Create(array, comparisons, swaps);
         }
 
         private int Partition(List<int> array, int low, int high, ref int comparisons, ref int swaps)
@@ -53,3 +76,12 @@ namespace Ordenacao.Services
         }
     }
 }
+
+// Parallel Sorting:
+// The QuickSort method now uses Task.Run to perform parallel quicksort on the left and right partitions of the array.
+// These tasks are awaited using Task.WhenAll(leftTask, rightTask).Wait() to ensure both partitions are processed before combining the results.
+// Avoiding ref:
+// Instead of passing comparisons and swaps as ref parameters, these are tracked locally in each method and returned as part of a Tuple<List<int>, int, int>.
+// The results for comparisons and swaps from each partition are accumulated in the QuickSort method.
+// Partition Logic:
+// The partitioning logic remains the same as in your base code, but it now works with the parallelized sorting tasks.

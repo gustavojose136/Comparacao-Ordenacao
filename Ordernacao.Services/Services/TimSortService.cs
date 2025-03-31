@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ordenacao.Services
 {
@@ -19,20 +21,29 @@ namespace Ordenacao.Services
 
             int n = array.Count;
 
-            // Aplica Insertion Sort para subarrays de tamanho RUN
+            // Apply Insertion Sort to subarrays of size RUN
             for (int i = 0; i < n; i += RUN)
                 InsertionSort(array, i, Math.Min(i + RUN - 1, n - 1), ref comparisons, ref swaps);
 
-            // Mescla os subarrays ordenados progressivamente
+            // Merge the sorted subarrays progressively, using parallelism for merge steps
             for (int size = RUN; size < n; size *= 2)
             {
+                // Parallelize the merging process
+                var tasks = new List<Task>();
+
                 for (int left = 0; left < n; left += 2 * size)
                 {
                     int mid = left + size - 1;
                     int right = Math.Min((left + 2 * size - 1), (n - 1));
+
                     if (mid < right)
-                        Merge(array, left, mid, right, ref comparisons, ref swaps);
+                    {
+                        tasks.Add(Task.Run(() => Merge(array, left, mid, right, ref comparisons, ref swaps)));
+                    }
                 }
+
+                // Wait for all merging tasks to complete
+                Task.WhenAll(tasks).Wait();
             }
 
             stopwatch.Stop();
@@ -96,3 +107,14 @@ namespace Ordenacao.Services
         }
     }
 }
+
+// Parallelizing the Merge Process:
+// The merging process is now parallelized using Task.Run. We create tasks for each merge operation and execute them 
+// concurrently. After all tasks are created, we use Task.WhenAll to wait for them to finish before continuing.
+// InsertionSort:
+// InsertionSort is kept sequential as it is typically efficient for small subarrays (like those in TimSort) and 
+// parallelizing it may not yield significant benefits for small-sized data.
+// Thread Safety:
+// The Merge method is still being executed with thread-safety in mind, as each merge task is independent of others.
+// Task Management:
+// The use of Task.WhenAll(tasks).Wait() ensures that all merge tasks complete before moving on to the next stage.

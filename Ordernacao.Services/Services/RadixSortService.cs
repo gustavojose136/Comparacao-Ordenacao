@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ordenacao.Services
 {
@@ -25,7 +27,9 @@ namespace Ordenacao.Services
 
             for (int exp = 1; max / exp > 0; exp *= 10)
             {
-                CountSortByDigit(array, exp, ref comparisons, ref swaps);
+                var result = CountSortByDigit(array, exp);
+                comparisons += result.Item2;
+                swaps += result.Item3;
             }
 
             stopwatch.Stop();
@@ -33,36 +37,54 @@ namespace Ordenacao.Services
             return array;
         }
 
-        private void CountSortByDigit(List<int> array, int exp, ref int comparisons, ref int swaps)
+        private Tuple<List<int>, int, int> CountSortByDigit(List<int> array, int exp)
         {
+            int comparisons = 0, swaps = 0;
             int n = array.Count;
             int[] output = new int[n];
             int[] count = new int[10];
 
-            for (int i = 0; i < n; i++)
+            // Parallelizing the first pass for counting digits
+            Parallel.For(0, n, i =>
             {
                 int digit = (array[i] / exp) % 10;
-                count[digit]++;
+                lock (count)
+                {
+                    count[digit]++;
+                }
                 comparisons++;
-            }
+            });
 
-            for (int i = 1; i < 10; i++)
+            // Parallelizing the accumulation of counts
+            Parallel.For(1, 10, i =>
             {
                 count[i] += count[i - 1];
-            }
+            });
 
-            for (int i = n - 1; i >= 0; i--)
+            // Parallelizing the assignment of sorted elements to the output array
+            Parallel.For(n - 1, -1, i =>
             {
                 int digit = (array[i] / exp) % 10;
-                output[count[digit] - 1] = array[i];
+                lock (output)
+                {
+                    output[count[digit] - 1] = array[i];
+                }
                 count[digit]--;
                 swaps++;
-            }
+            });
 
+            // Copying the output array to the original array
             for (int i = 0; i < n; i++)
             {
                 array[i] = output[i];
             }
+
+            return Tuple.Create(array, comparisons, swaps);
         }
     }
 }
+
+// Parallelism in CountSortByDigit:
+// Counting Digits: Parallelized the loop that counts the occurrences of each digit by using Parallel.For.
+// Accumulating Counts: Parallelized the accumulation of counts for each digit.
+// Assigning to Output Array: Parallelized the loop where the sorted elements are assigned to the output array.

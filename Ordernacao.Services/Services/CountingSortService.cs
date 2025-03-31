@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ordenacao.Services
 {
@@ -16,24 +18,30 @@ namespace Ordenacao.Services
                 return array;
 
             int min = array[0], max = array[0];
-            foreach (int num in array)
+            object lockObj = new();
+
+            Parallel.ForEach(array, num =>
             {
+                lock (lockObj)
+                {
+                    if (num < min) min = num;
+                    if (num > max) max = num;
+                }
                 comparisons++;
-                if (num < min)
-                    min = num;
-                if (num > max)
-                    max = num;
-            }
+            });
 
             int range = max - min + 1;
             int[] count = new int[range];
             int[] output = new int[array.Count];
 
-            foreach (int num in array)
+            Parallel.ForEach(array, num =>
             {
+                lock (lockObj)
+                {
+                    count[num - min]++;
+                }
                 comparisons++;
-                count[num - min]++;
-            }
+            });
 
             for (int i = 1; i < count.Length; i++)
                 count[i] += count[i - 1];
@@ -44,12 +52,17 @@ namespace Ordenacao.Services
                 count[array[i] - min]--;
             }
 
-            for (int i = 0; i < array.Count; i++)
+            Parallel.For(0, array.Count, i =>
+            {
                 array[i] = output[i];
+            });
 
             stopwatch.Stop();
-            SortLogger.LogSortDetails("CountingSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, 0);
+            SortLogger.LogSortDetails("ParallelCountingSort", array.Count, (long)stopwatch.Elapsed.TotalMilliseconds, comparisons, 0);
             return array;
         }
     }
 }
+
+// A versão paralelizada do CountingSortService agora usa Parallel.ForEach para encontrar os valores mínimo e máximo e preencher a 
+// contagem de forma concorrente. A cópia final do array também foi paralelizada para melhor desempenho. 
