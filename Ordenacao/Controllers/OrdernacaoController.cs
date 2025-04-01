@@ -21,7 +21,7 @@ namespace Ordenacao.Controllers
                                    DataGeneratorService dataGeneratorService)
         {
             _sortingContext = new SortingContext();
-            // Usa o nome da classe (removendo "Service") em lowercase para chave
+
             _sortStrategies = sortStrategies.ToDictionary(s => s.GetType().Name.Replace("Service", "").ToLower());
             _sortComparisonService = sortComparisonService;
             _dataGeneratorService = dataGeneratorService;
@@ -83,7 +83,7 @@ namespace Ordenacao.Controllers
             try
             {
                 var randomNumbers = _dataGeneratorService.GenerateRandomNumbers(tamanho);
-                // Define o tipo de arquivo: "binary" para binário, qualquer outro para texto
+
                 FileType tipo = fileType.ToLower() == "binary" ? FileType.Binary : FileType.Text;
                 _dataGeneratorService.SaveNumbersToFile(randomNumbers, filePath, tipo);
 

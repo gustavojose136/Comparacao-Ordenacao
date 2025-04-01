@@ -24,7 +24,7 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metricsProviderBuilder =>
     {
         metricsProviderBuilder
-            .AddAspNetCoreInstrumentation(); // Instrumentação de métricas para ASP.NET Core
+            .AddAspNetCoreInstrumentation(); 
     });
 
 // Add logging with OpenTelemetry
